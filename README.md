@@ -67,7 +67,7 @@ Una vez ejecutado el comando se puede acceder directamente a los logs a través 
  ![imagen](https://user-images.githubusercontent.com/2046110/187735764-429053fe-8981-45ea-9c58-820a523ca365.png)
  ![imagen](https://user-images.githubusercontent.com/2046110/187747496-bf138f0e-3d91-40f1-a6e6-d0bb308e54b2.png)
 
-## Comandos habituales:
+## Comandos habituales
 
   - Generar las máquinas virtuales y generar el stack:
   ```bash
@@ -90,7 +90,7 @@ vagrant ssh -c "bash /etc/generate-index-patterns.sh" practicaelkroberto
   ```
   
 
-## Logs:
+## Logs
 
 Dejo en esta sección los logs generados al desplegar el stack.
 
