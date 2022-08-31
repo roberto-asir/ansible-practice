@@ -1,19 +1,4 @@
 #!/bin/bash
-CODE=0
-
-# while ($CODE -ne 200); do
-#         CODE=$(curl --write-out "%{http_code}\n" -s -XGET "localhost:9200/filebeat*/_settings?pretty" --output /dev/null )
-#         sleep 10
-# done
-
-# CODE=0
-# sleep 50
-# while ($CODE -ne 200);do
-#     CODE=$(curl --write-out "%{http_code}\n" -s -XGET "localhost" --output /dev/null )
-#     sleep 10
-# done
-
-
 
 curl 192.168.50.4 --output /dev/null
 
