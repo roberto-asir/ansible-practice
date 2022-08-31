@@ -1,0 +1,49 @@
+---
+- name: Mariadb install
+  hosts: all
+  vars_files:
+    - ../vars/config_vars.yaml
+      #  debugger: always
+  tasks:
+    - name: mariadb from repositories
+      ansible.builtin.apt:
+        name: 
+          - mariadb-server
+          - mariadb-common
+        state: latest
+        update_cache: yes
+        cache_valid_time: 3600
+      become: yes
+      notify: 
+        - start mariadb
+        # - securize mariadb
+    - name: install requirements
+      become: yes
+      ansible.builtin.apt:
+        pkg: python3-pymysql
+        state: present
+    - name: Create wp database
+      become: yes
+      community.mysql.mysql_db:
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        name: "{{ mariadb.dbname }}"
+        state: present
+    - name: create user wp database
+      become: yes
+      community.mysql.mysql_user:
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        name: "{{ mariadb.user }}"
+        password: "{{ mariadb.passwd }}"
+        priv: "{{ mariadb.dbname }}.*:ALL"
+        state: present
+
+  handlers:
+    - name: start mariadb
+      become: yes
+      ansible.builtin.service: 
+        name: mysql 
+        state: started 
+        enabled: true
+    # - name: securize mariadb
+    #   become: yes
+    #   import_playbook: ./securizedb.yaml

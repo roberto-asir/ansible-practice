@@ -1,0 +1,21 @@
+---
+wp:
+  user: practicasys
+  passwd: Practica2022
+  weblogtitle: Practica Roberto Pérez 
+  username: practica 
+  adminpassword: Practica2022 
+  adminpassword2: Practica2022 
+  adminemail: roberto@example.com 
+  blogpublic: 0 
+  submit: Install WordPress 
+  language: 
+mariadb:
+  rootpasswd: practica
+  user: practica
+  dbname: practica
+  passwd: Practica2023
+kibanahtpasswd:
+    user: kibanaadmin
+    passwd: kibanaadmin
+    path: /etc/nginx/htpasswd.users

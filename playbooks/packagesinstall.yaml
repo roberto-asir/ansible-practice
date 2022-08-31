@@ -1,0 +1,24 @@
+---
+# Playbook to install apt packages
+# Used with import_playbook and vars: with  {{ packages }} variable
+# If we have to install more than one package the content of {{ packages }} have to be an array
+# Example:
+# - name: Install JDK, nginx, logstash, elasticsearch and kibana
+#   ansible.builtin.import_playbook: ./packagesinstall.yaml
+#   vars:
+#     packages: 
+#       - default-jre 
+#       - nginx 
+#       - logstash 
+#       - elasticsearch 
+#       - kibana
+- name: Install packages
+  hosts: all
+  become: yes
+  tasks:
+    - name: Patience, installing -- "{{ packages }}"
+      ansible.builtin.apt:
+        name: "{{ packages }}"
+        state: latest
+        update_cache: yes
+        cache_valid_time: 3600

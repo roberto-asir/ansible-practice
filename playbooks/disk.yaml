@@ -1,0 +1,57 @@
+---
+- name: Mount partition
+  # https://www.redhat.com/sysadmin/automating-logical-volume-manager
+  hosts: all
+  gather_facts: true
+  become: true
+  vars_files:
+    - ../vars/config_vars.yaml
+  tasks:
+    - name: Check disk status
+      # "Generate physical disk" tasks is not idempotent so it needs this check
+      stat:
+        path: "/dev/sdc1"
+      register: sdc1
+    - name: Generate physical disk
+        # https://docs.ansible.com/ansible/2.5/modules/parted_module.html?highlight=partition
+      community.general.parted:
+          device: /dev/sdc
+          flags: [ lvm ]
+          number: 2
+          label: gpt
+          state: present
+      when: not sdc1.stat.exists
+      notify:
+        - Create a volume group
+        - Create logical volume
+        - Create destiny directory
+        - Format lv
+        - Mount lv on destiny
+  handlers:
+    - name: Create a volume group 
+      # https://docs.ansible.com/ansible/latest/collections/community/general/lvg_module.html#ansible-collections-community-general-lvg-module
+      community.general.lvg :
+          vg: "{{ vg }}"
+          pvs: /dev/sdc1
+          pesize: 32
+    - name: Create logical volume
+      # create a logical volume https://docs.ansible.com/ansible/latest/collections/community/general/lvol_module.html#ansible-collections-community-general-lvol-module
+      community.general.lvol:
+          vg: "{{ vg }}"
+          lv: "{{ lv }}"
+          size: 100%FREE
+    - name: Create destiny directory
+      file:
+          path: "{{ path }}"
+          state: directory
+          mode: '0755'
+    - name: Format lv
+      filesystem:
+          fstype: ext4
+          dev: "{{ dev }}"
+    - name: Mount lv on destiny
+      mount:
+        path: "{{ path }}"
+        src: "{{ dev }}"
+        fstype: ext4
+        state: mounted

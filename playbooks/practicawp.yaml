@@ -1,0 +1,45 @@
+# Roberto Pérez 08-07-2022
+# Practica sysadmins devOps keepcoding 2022
+# Provision para máquina virtual 1
+- name: Disk tasks
+  # Add a new volume from an entire new disk
+  ansible.builtin.import_playbook: ./disk.yaml
+  vars:
+    vg: vgpracticawp
+    lv: mysql
+    path: /var/lib/mysql
+    dev: /dev/vgpracticawp/mysql
+
+- name: Add Elastic repositories
+  ansible.builtin.import_playbook: ./addelasticrepo.yaml
+
+- name: Install nginx, mariadb, php modules, filebeat
+  ansible.builtin.import_playbook: ./packagesinstall.yaml
+  vars:
+    packages: 
+      - nginx
+      - mariadb-common
+      - mariadb-server
+      - php-cli
+      - php-mysql
+      - php-fpm 
+      - php-curl 
+      - php-gd 
+      - php-intl 
+      - php-mbstring 
+      - php-soap
+      - php-xml 
+      - php-xmlrpc 
+      - php-zip 
+      - filebeat
+
+- name: Install Nginx
+  import_playbook: ./nginx.yaml
+- name: Install Mariadb
+  import_playbook: ./mariadb.yaml
+- name: Securiza Mariadb
+  import_playbook: ./securizedb.yaml
+- name: Install WordPress
+  import_playbook: ./wordpress.yaml 
+- name: Install filebeat
+  import_playbook: ./filebeat.yaml

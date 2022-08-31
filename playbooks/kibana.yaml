@@ -1,0 +1,34 @@
+---
+- name: Install system dependencies to use community.general.htpasswd module
+  ansible.builtin.import_playbook: ./packagesinstall.yaml
+  vars:
+    packages: 
+      - python-passlib
+      - python3-passlib
+
+- name: Configure  kibana
+  hosts: all
+  become: yes
+  vars_files: 
+  - ../vars/config_vars.yaml
+  tasks:
+    - name: Set nginx config default to works with kibana
+      ansible.builtin.copy:
+        src: ../files/nginx-kibana-conf
+        dest: /etc/nginx/sites-available/default
+    - name: Generate htpasswd configuration
+      community.general.htpasswd:
+        path: "{{ kibanahtpasswd.path }}"
+        name: "{{ kibanahtpasswd.user }}"
+        password: "{{ kibanahtpasswd.passwd }}"
+        owner: root
+        group: www-data
+        mode: 0640
+    - name: restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+    - name: restart kibana
+      ansible.builtin.service:
+        name: kibana
+        state: restarted

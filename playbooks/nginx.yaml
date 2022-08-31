@@ -1,0 +1,32 @@
+---
+- name: Nginx installation and administration
+  hosts: all
+  tasks:
+    - name: sites-available to wordpress
+      become: yes
+      ansible.builtin.copy:
+      #https://docs.ansible.com/ansible/latest/collections/ansible/builtin/copy_module.html
+        src: ../files/nginx-wordpress-conf
+        dest: /etc/nginx/sites-available/wordpress
+      notify:
+        - sites-enabled to wordpress
+        - delete default configuration
+        - restart nginx
+  handlers:
+    - name: sites-enabled to wordpress
+      become: yes
+      ansible.builtin.file:
+      # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/file_module.html
+        src: /etc/nginx/sites-available/wordpress
+        dest: /etc/nginx/sites-enabled/wordpress
+        state: link
+    - name: delete default configuration
+      become: yes
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+    - name: restart nginx
+      become: yes
+      ansible.builtin.service:
+          name: nginx
+          state: restarted

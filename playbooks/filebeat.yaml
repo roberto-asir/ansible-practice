@@ -1,0 +1,37 @@
+---
+
+- name: Playbook to install and configure filebeat
+  hosts: all
+  become: yes
+  vars_files:
+    - ../vars/config_vars.yaml
+  tasks:
+    - name: Enabling filebeat modules
+      ansible.builtin.command: filebeat modules enable system nginx
+    - name: Configurate filebeat 
+      ansible.builtin.lineinfile:
+        path: /etc/filebeat/filebeat.yml
+        regexp: "{{item.regexp}}"
+        line: "{{item.line}}"
+      with_items:
+        - {'regexp': "- type: filestream", 'line': "- type: log"}
+        - {'regexp': "id: my-filestream-id", 'line': "  id: my-log-id"}
+        - {'regexp': "  enabled: false", 'line': "  enabled: true"}
+        - {'regexp': "output.elasticsearch:", 'line': "#output.elasticsearch:"}
+        - {'regexp': '  hosts:.*localhost:9200.*', 'line': '  # hosts: ["localhost:9200"]'}
+        - {'regexp': '#output.logstash:', 'line': 'output.logstash:'}
+        - {'regexp': '  #hosts:.*localhost:5044.*', 'line': '  hosts: ["192.168.50.3:5044"]'}
+    - name: Configurate filebeat logs 
+      ansible.builtin.lineinfile:
+          path: /etc/filebeat/filebeat.yml
+          insertafter: '.*-.*/var/log/\*.log'
+          state: present
+          firstmatch: yes
+          line: "{{item}}"
+      with_items: 
+        - '    - /var/log/nginx/*.log'
+        - '    - /var/log/mysql/*.log'
+    - name: Restart filebeat
+      ansible.builtin.service:
+        name: filebeat 
+        state: restarted 

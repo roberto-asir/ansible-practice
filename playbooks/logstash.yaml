@@ -1,0 +1,23 @@
+---
+# playbook to configure logstash
+- name: Configure logstash
+  hosts: all
+  become: yes
+  tasks:
+    - name: Configure input logs
+      ansible.builtin.copy:
+        src: ../files/logstash-input-conf
+        dest: /etc/logstash/conf.d/02-beats-input.conf
+    - name: Configure input, filter and output logs
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items: 
+        - {'src': '../files/logstash-input-conf', 'dest': '/etc/logstash/conf.d/02-beats-input.conf'}
+        - {'src': '../files/logstash-filter-conf', 'dest': '/etc/logstash/conf.d/10-syslog-filter.conf'}
+        - {'src': '../files/logstash-output-conf', 'dest': '/etc/logstash/conf.d/30-elasticsearch-output.conf'}
+    - name: Restart logstash
+      ansible.builtin.service:
+        name: logstash
+        state: restarted
+

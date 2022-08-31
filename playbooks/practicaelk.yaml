@@ -1,0 +1,30 @@
+# Roberto Pérez 08-07-2022
+# Practica sysadmins devOps keepcoding 2022
+# Provision para máquina virtual 1
+- name: Disk tasks
+  # Add a new volume from an entire new disk
+  ansible.builtin.import_playbook: ./disk.yaml
+  vars:
+    vg: vgpracticaelk
+    lv: elastic
+    path: /var/lib/elasticsearch
+    dev: /dev/vgpracticaelk/elastic
+- name: Add Elastic repositories
+  ansible.builtin.import_playbook: ./addelasticrepo.yaml
+- name: Install JDK, nginx, logstash, elasticsearch and kibana
+  ansible.builtin.import_playbook: ./packagesinstall.yaml
+  vars:
+    packages: 
+      - default-jre 
+      - nginx 
+      - logstash 
+      - elasticsearch 
+      - kibana
+- name: Configure logstash
+  ansible.builtin.import_playbook: ./logstash.yaml
+  
+- name: Configure kibana
+  ansible.builtin.import_playbook: ./kibana.yaml
+
+- name: Configure and start elasticsearch service
+  ansible.builtin.import_playbook: ./elasticsearch.yaml

@@ -1,0 +1,62 @@
+---
+- name: Install WordPress
+  hosts: all
+  become: yes
+  vars_files:
+    - ../vars/config_vars.yaml
+  tasks:
+    - name: Check is_wordpress
+      ansible.builtin.stat:
+        path: /var/www/wordpress/wp-config.php
+      register: is_wordpress
+    - name: Download WordPress/etc/nginx/sites-available/wordpress
+      ansible.builtin.unarchive:
+      # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/unarchive_module.html
+        src: https://wordpress.org/latest.tar.gz
+        dest: /var/www/
+        remote_src: yes
+      when: not is_wordpress.stat.exists
+      notify:
+        - Create config file
+        - Edit config file
+        - Request to create and populate WordPress database
+        - Change Wordpress config to let access from localhost:8080
+  handlers:
+    - name: Create config file
+      ansible.builtin.copy:
+        src: /var/www/wordpress/wp-config-sample.php
+        dest: /var/www/wordpress/wp-config.php
+        remote_src: yes
+    - name: Edit config file
+      lineinfile:
+        path: /var/www/wordpress/wp-config.php
+        regexp: "{{item.regexp}}"
+        line: "{{item.line}}"
+      with_items:
+        - {'regexp': "define\\( 'DB_NAME', '(.)+' \\);", 'line': "define( 'DB_NAME', '{{ mariadb.dbname }}' );"}
+        - {'regexp': "define\\( 'DB_USER', '(.)+' \\);", 'line': "define( 'DB_USER', '{{ mariadb.user }}' );"}
+        - {'regexp': "define\\( 'DB_PASSWORD', '(.)+' \\);", 'line': "define( 'DB_PASSWORD', '{{ mariadb.passwd }}' );"}
+    - name: Request to create and populate WordPress database
+    # This request is necessary to make WordPress fully functional
+      ansible.builtin.uri:
+        url: http://localhost/wp-admin/install.php?step=2
+        method: POST
+        body_format: form-urlencoded
+        body:
+        - [ weblog_title, "{{ wp.weblogtitle }}" ]
+        - [ user_name, "{{ wp.username }}" ]
+        - [ admin_password, "{{ wp.adminpassword }}" ]
+        - [ admin_password2, "{{ wp.adminpassword2 }}" ]
+        - [ admin_email, "{{ wp.adminemail }}" ]
+        - [ blog_public, "{{ wp.blogpublic }}" ]
+        - [ Submit, "{{ wp.submit }}" ]
+        - [ language, "{{ wp.language }}" ]
+        status_code: 200 
+    - name: Change Wordpress config to let access from localhost:8080
+      # just to run a local script to generate automated logs 
+      community.mysql.mysql_query:
+        login_db: "{{ mariadb.dbname }}"
+        query:
+        - UPDATE wp_options set option_value = 'http://localhost:8080' where option_name = 'home'
+        - UPDATE wp_options set option_value = 'http://localhost:8080' where option_name = 'siteurl'
+    # - name: Run script to generate logs (maybe with crontab and a script which access to the web)

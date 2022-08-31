@@ -1,0 +1,19 @@
+---
+- name: Configure permissions and start elasticsearch service
+  become: yes
+  hosts: all
+  tasks:
+    - name: Change file ownership, group and permissions
+      ansible.builtin.file:
+        path: /var/lib/elasticsearch
+        owner: elasticsearch
+        group: elasticsearch
+    - name: Restart elasticsearch
+      ansible.builtin.service:
+        name: elasticsearch
+        state: started
+    - name: Copy create index patterns script 
+      ansible.builtin.copy:
+        src: ../files/generate-index-patterns.sh
+        dest: /etc/generate-index-patterns.sh
+        mode: 0777

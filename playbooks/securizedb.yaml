@@ -1,0 +1,44 @@
+---
+- name: securize mariadb
+  become: yes
+  hosts: all
+  vars_files:
+    - "../vars/config_vars.yaml"
+  tasks:
+    - name: "Delete anonymous users"
+      community.mysql.mysql_user:
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        name: ''
+        host: localhost
+        state: absent
+    - name: Delete test database
+      become: yes
+      community.mysql.mysql_db:
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        name: test
+        state: present
+    - name: Check root passwd
+      # "Change root passwd" tasks  gnerate error if 
+      # password es changed
+      stat:
+        path: "/root/.my.cnf"
+      register: rootpass
+    - name: Change root passwd
+      mysql_user:
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        name: root
+        password: "{{ mariadb.rootpasswd }}"
+        update_password: always
+        state: present
+      when: not rootpass.stat.exists
+    - name: Specify root credentials file
+      ansible.builtin.template:
+        src: ../templates/.my.cnf.j2
+        dest: /root/.my.cnf
+        owner: root
+        mode: 0600
+    # #UPDATE mysql.user SET Password=PASSWORD('${db_root_password}') WHERE User='root'
+    # ### DELETE FROM mysql.user WHERE User=''
+    # #DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1')
+    # #DROP DATABASE IF EXISTS test
+    # #FLUSH PRIVILEGES
